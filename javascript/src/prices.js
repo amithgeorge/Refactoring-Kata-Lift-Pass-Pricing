@@ -2,25 +2,31 @@ const express = require("express");
 const mysql = require("mysql2/promise");
 
 function compute_day_of_week_discount(holidays, date) {
-  let isHoliday;
+  if (!date) {
+    return 0;
+  }
+
+  date = new Date(date);
+
+  let isHoliday = false;
   let reduction = 0;
+
   for (let row of holidays) {
     let holiday = row.holiday;
-    if (date) {
-      let d = new Date(date);
-      if (
-        d.getFullYear() === holiday.getFullYear() &&
-        d.getMonth() === holiday.getMonth() &&
-        d.getDate() === holiday.getDate()
-      ) {
-        isHoliday = true;
-      }
+    if (
+      date.getFullYear() === holiday.getFullYear() &&
+      date.getMonth() === holiday.getMonth() &&
+      date.getDate() === holiday.getDate()
+    ) {
+      isHoliday = true;
+      break;
     }
   }
 
-  if (!isHoliday && new Date(date).getDay() === 1) {
+  if (!isHoliday && date.getDay() === 1) {
     reduction = 35;
   }
+
   return reduction;
 }
 
