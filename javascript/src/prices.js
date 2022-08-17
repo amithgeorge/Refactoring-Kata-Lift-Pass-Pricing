@@ -1,6 +1,29 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 
+function compute_day_of_week_discount(holidays, date) {
+  let isHoliday;
+  let reduction = 0;
+  for (let row of holidays) {
+    let holiday = row.holiday;
+    if (date) {
+      let d = new Date(date);
+      if (
+        d.getFullYear() === holiday.getFullYear() &&
+        d.getMonth() === holiday.getMonth() &&
+        d.getDate() === holiday.getDate()
+      ) {
+        isHoliday = true;
+      }
+    }
+  }
+
+  if (!isHoliday && new Date(date).getDay() === 1) {
+    reduction = 35;
+  }
+  return reduction;
+}
+
 async function createApp() {
   const app = express();
 
@@ -51,49 +74,27 @@ async function createApp() {
       return;
     }
 
-    if (data.type !== "night") {
-      const holidays = (await connection.query("SELECT * FROM `holidays`"))[0];
+    const holidays = (await connection.query("SELECT * FROM `holidays`"))[0];
+    let reduction = compute_day_of_week_discount(holidays, data.date);
 
-      let isHoliday;
-      let reduction = 0;
-      for (let row of holidays) {
-        let holiday = row.holiday;
-        if (data.date) {
-          let d = new Date(data.date);
-          if (
-            d.getFullYear() === holiday.getFullYear() &&
-            d.getMonth() === holiday.getMonth() &&
-            d.getDate() === holiday.getDate()
-          ) {
-            isHoliday = true;
-          }
-        }
-      }
-
-      if (!isHoliday && new Date(data.date).getDay() === 1) {
-        reduction = 35;
-      }
-
-      // TODO apply reduction for others
-      if (data.age < 15) {
-        res.json({ cost: Math.ceil(result.cost * 0.7) });
+    // TODO apply reduction for others
+    if (data.age < 15) {
+      res.json({ cost: Math.ceil(result.cost * 0.7) });
+    } else {
+      if (data.age === undefined) {
+        let cost = result.cost * (1 - reduction / 100);
+        res.json({ cost: Math.ceil(cost) });
       } else {
-        if (data.age === undefined) {
-          let cost = result.cost * (1 - reduction / 100);
+        if (data.age > 64) {
+          let cost = result.cost * 0.75 * (1 - reduction / 100);
           res.json({ cost: Math.ceil(cost) });
         } else {
-          if (data.age > 64) {
-            let cost = result.cost * 0.75 * (1 - reduction / 100);
-            res.json({ cost: Math.ceil(cost) });
-          } else {
-            let cost = result.cost * (1 - reduction / 100);
-            res.json({ cost: Math.ceil(cost) });
-          }
+          let cost = result.cost * (1 - reduction / 100);
+          res.json({ cost: Math.ceil(cost) });
         }
       }
-
-      return;
     }
+    return;
   });
 
   return { app, connection };
