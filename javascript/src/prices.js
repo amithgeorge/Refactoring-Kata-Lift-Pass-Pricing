@@ -30,24 +30,26 @@ function compute_day_of_week_discount(holidays, date) {
   return reduction;
 }
 
-function compute_final_price(holidays, plan, { type, date, age }) {
-  if (type === "night") {
-    if (age === undefined || age < 6) {
-      return 0;
-    }
-
-    if (age > 64) {
-      return Math.ceil(plan.cost * 0.4);
-    }
-
-    return plan.cost;
+function compute_price_for_night_pass({ cost }, { age }) {
+  if (age === undefined || age < 6) {
+    return 0;
   }
 
-  let reduction = compute_day_of_week_discount(holidays, date);
+  if (age > 64) {
+    return Math.ceil(cost * 0.4);
+  }
 
+  return cost;
+}
+
+function compute_price_for_non_night_passes(
+  day_of_week_discount,
+  pass,
+  { age }
+) {
   // TODO apply reduction for others
   if (age === undefined) {
-    let cost = plan.cost * (1 - reduction / 100);
+    let cost = pass.cost * (1 - day_of_week_discount / 100);
     return Math.ceil(cost);
   }
 
@@ -56,16 +58,31 @@ function compute_final_price(holidays, plan, { type, date, age }) {
   }
 
   if (age < 15) {
-    return Math.ceil(plan.cost * 0.7);
+    return Math.ceil(pass.cost * 0.7);
   }
 
   if (age > 64) {
-    let cost = plan.cost * 0.75 * (1 - reduction / 100);
+    let cost = pass.cost * 0.75 * (1 - day_of_week_discount / 100);
     return Math.ceil(cost);
   }
 
-  let cost = plan.cost * (1 - reduction / 100);
+  let cost = pass.cost * (1 - day_of_week_discount / 100);
   return Math.ceil(cost);
+}
+
+async function compute_final_price(get_holidays, plan, { type, date, age }) {
+  if (type === "night") {
+    return compute_price_for_night_pass(plan, { age });
+  }
+
+  const holidays = await get_holidays();
+  return compute_price_for_non_night_passes(
+    compute_day_of_week_discount(holidays, date),
+    plan,
+    {
+      age,
+    }
+  );
 }
 
 async function createApp() {
@@ -78,6 +95,10 @@ async function createApp() {
     password: "mysql",
   };
   const connection = await mysql.createConnection(connectionOptions);
+
+  async function get_holidays() {
+    return (await connection.query("SELECT * FROM `holidays`"))[0];
+  }
 
   app.put("/prices", async (req, res) => {
     const liftPassCost = req.query.cost;
@@ -99,9 +120,8 @@ async function createApp() {
         [data.type]
       )
     )[0][0];
-    const holidays = (await connection.query("SELECT * FROM `holidays`"))[0];
 
-    const final_price = compute_final_price(holidays, result, data);
+    const final_price = await compute_final_price(get_holidays, result, data);
     return res.json({ ...result, cost: final_price });
   });
 
