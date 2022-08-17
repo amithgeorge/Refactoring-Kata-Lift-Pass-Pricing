@@ -31,12 +31,8 @@ function compute_day_of_week_discount(holidays, date) {
 }
 
 function compute_final_price(holidays, plan, { type, date, age }) {
-  if (age < 6) {
-    return 0;
-  }
-
   if (type === "night") {
-    if (age === undefined) {
+    if (age === undefined || age < 6) {
       return 0;
     }
 
@@ -53,6 +49,10 @@ function compute_final_price(holidays, plan, { type, date, age }) {
   if (age === undefined) {
     let cost = plan.cost * (1 - reduction / 100);
     return Math.ceil(cost);
+  }
+
+  if (age < 6) {
+    return 0;
   }
 
   if (age < 15) {
