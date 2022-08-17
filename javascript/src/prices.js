@@ -84,22 +84,26 @@ async function createApp() {
     let reduction = compute_day_of_week_discount(holidays, data.date);
 
     // TODO apply reduction for others
+    if (data.age === undefined) {
+      let cost = result.cost * (1 - reduction / 100);
+      res.json({ cost: Math.ceil(cost) });
+      return;
+    }
+
     if (data.age < 15) {
       res.json({ cost: Math.ceil(result.cost * 0.7) });
-    } else {
-      if (data.age === undefined) {
-        let cost = result.cost * (1 - reduction / 100);
-        res.json({ cost: Math.ceil(cost) });
-      } else {
-        if (data.age > 64) {
-          let cost = result.cost * 0.75 * (1 - reduction / 100);
-          res.json({ cost: Math.ceil(cost) });
-        } else {
-          let cost = result.cost * (1 - reduction / 100);
-          res.json({ cost: Math.ceil(cost) });
-        }
-      }
+      return;
     }
+
+    if (data.age > 64) {
+      let cost = result.cost * 0.75 * (1 - reduction / 100);
+      res.json({ cost: Math.ceil(cost) });
+      return;
+    }
+
+    let cost = result.cost * (1 - reduction / 100);
+    res.json({ cost: Math.ceil(cost) });
+
     return;
   });
 
