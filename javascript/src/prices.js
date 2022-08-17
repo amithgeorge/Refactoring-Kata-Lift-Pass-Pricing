@@ -70,15 +70,30 @@ function compute_price_for_non_night_passes(
   return Math.ceil(cost);
 }
 
-async function compute_final_price(get_holidays, plan, { type, date, age }) {
-  if (type === "night") {
-    return compute_price_for_night_pass(plan, { age });
+async function compute_final_price(
+  get_pass,
+  get_holidays,
+  { type, date, age }
+) {
+  // Originally this function was accepting as arguments, the pass and the list of holidays.
+  // I am making an assumption that it is very expensive to get the pass and to get the list of holidays from the db.
+  // The assumption is not based in reality, however I wanted to see how the code would change to accomodate it.
+  // This is the "optimized" version, where we fetch the pass and the holidays only when needed.
+
+  if (age < 6) {
+    // if age is < 6, it doesn't matter which pass or which day of week. it always costs 0.
+    return 0;
+  }
+
+  const pass = await get_pass(type);
+  if (pass.type === "night") {
+    return compute_price_for_night_pass(pass, { age });
   }
 
   const holidays = await get_holidays();
   return compute_price_for_non_night_passes(
     compute_day_of_week_discount(holidays, date),
-    plan,
+    pass,
     {
       age,
     }
@@ -100,6 +115,15 @@ async function createApp() {
     return (await connection.query("SELECT * FROM `holidays`"))[0];
   }
 
+  async function get_pass(type) {
+    return (
+      await connection.query(
+        "SELECT cost, type FROM `base_price` " + "WHERE `type` = ? ",
+        [type]
+      )
+    )[0][0];
+  }
+
   app.put("/prices", async (req, res) => {
     const liftPassCost = req.query.cost;
     const liftPassType = req.query.type;
@@ -114,15 +138,8 @@ async function createApp() {
 
   app.get("/prices", async (req, res) => {
     const data = req.query;
-    const result = (
-      await connection.query(
-        "SELECT cost FROM `base_price` " + "WHERE `type` = ? ",
-        [data.type]
-      )
-    )[0][0];
-
-    const final_price = await compute_final_price(get_holidays, result, data);
-    return res.json({ ...result, cost: final_price });
+    const final_price = await compute_final_price(get_pass, get_holidays, data);
+    return res.json({ cost: final_price });
   });
 
   return { app, connection };
