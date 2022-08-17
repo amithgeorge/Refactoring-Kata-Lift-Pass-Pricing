@@ -38,17 +38,17 @@ describe("prices, for children", () => {
     connection.close();
   });
 
-  describe("at night", () => {
-    it("for children below the age 6, at night", async () => {
-      const response = await request(app).get("/prices?type=night&age=5");
+  it("for children below the age 6, any type of pass, any day of week, holiday or not", async () => {
+    const response = await request(app).get("/prices?age=5");
 
-      const expectedResult = { cost: 0 };
-      expect(response.body).toEqual(expectedResult);
-    });
+    const expectedResult = { cost: 0 };
+    expect(response.body).toEqual(expectedResult);
   });
 
+  describe.skip("at night", () => {});
+
   describe("at 1jour", () => {
-    it("for children below the age 6, at 1jour", async () => {
+    it.skip("for children below the age 6, at 1jour", async () => {
       const response = await request(app).get("/prices?type=1jour&age=5");
 
       const expectedResult = { cost: 0 };
@@ -62,12 +62,11 @@ describe("prices, for children", () => {
       expect(response.body).toEqual(expectedResult);
     });
 
-    describe("on Mondays and not a holiday", () => {
+    describe.skip("on Mondays and not a holiday", () => {
       it("for children below the age 6", async () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=5&date=2019-02-11"
         );
-
         const expectedResult = { cost: 0 };
         expect(response.body).toEqual(expectedResult);
       });
@@ -76,18 +75,16 @@ describe("prices, for children", () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=6&date=2019-02-11"
         );
-
         const expectedResult = { cost: 25 };
         expect(response.body).toEqual(expectedResult);
       });
     });
 
-    describe("on a holiday", () => {
+    describe.skip("on a holiday", () => {
       it("for children below the age 6", async () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=5&date=2019-02-18"
         );
-
         const expectedResult = { cost: 0 };
         expect(response.body).toEqual(expectedResult);
       });
@@ -96,31 +93,10 @@ describe("prices, for children", () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=6&date=2019-02-18"
         );
-
         const expectedResult = { cost: 25 };
         expect(response.body).toEqual(expectedResult);
       });
     });
-
-    // describe("on any other day", () => {
-    //   it("for children below the age 6", async () => {
-    //     const response = await request(app).get(
-    //       "/prices?type=1jour&age=5&date=2019-02-15"
-    //     );
-
-    //     const expectedResult = { cost: 0 };
-    //     expect(response.body).toEqual(expectedResult);
-    //   });
-
-    //   it("for children aged 6 and above till age 15", async () => {
-    //     const response = await request(app).get(
-    //       "/prices?type=1jour&age=6&date=2019-02-15"
-    //     );
-
-    //     const expectedResult = { cost: 25 };
-    //     expect(response.body).toEqual(expectedResult);
-    //   });
-    // });
   });
 });
 
@@ -138,16 +114,14 @@ describe("prices, for regular folks", () => {
   describe("at night", () => {
     it("for folks aged 6 and above, at night", async () => {
       const response = await request(app).get("/prices?type=night&age=6");
-
       const expectedResult = { cost: 19 };
       expect(response.body).toEqual(expectedResult);
     });
   });
 
   describe("at 1jour", () => {
-    it("for folks aged 15 and above, at 1jour", async () => {
+    it.skip("for folks aged 15 and above, at 1jour", async () => {
       const response = await request(app).get("/prices?type=1jour&age=15");
-
       const expectedResult = { cost: 35 };
       expect(response.body).toEqual(expectedResult);
     });
@@ -157,7 +131,6 @@ describe("prices, for regular folks", () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=15&date=2019-02-11"
         );
-
         const expectedResult = { cost: 23 };
         expect(response.body).toEqual(expectedResult);
       });
@@ -168,7 +141,6 @@ describe("prices, for regular folks", () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=15&date=2019-02-18"
         );
-
         const expectedResult = { cost: 35 };
         expect(response.body).toEqual(expectedResult);
       });
@@ -204,7 +176,7 @@ describe("prices, for senior folks", () => {
       expect(response.body).toEqual(expectedResult);
     });
 
-    describe("on Mondays and not a holiday", () => {
+    describe.skip("on Mondays and not a holiday", () => {
       it("for senior folks aged 65 and above", async () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=65&date=2019-02-11"
@@ -215,7 +187,7 @@ describe("prices, for senior folks", () => {
       });
     });
 
-    describe("on Mondays and a holiday", () => {
+    describe.skip("on Mondays and a holiday", () => {
       it("for senior folks aged 65 and above", async () => {
         const response = await request(app).get(
           "/prices?type=1jour&age=65&date=2019-02-18"
