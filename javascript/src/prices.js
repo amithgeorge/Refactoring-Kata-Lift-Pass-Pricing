@@ -78,16 +78,18 @@ async function createApp() {
           }
         }
       }
-    } else {
-      if (data.age >= 6) {
-        if (data.age > 64) {
-          res.json({ cost: Math.ceil(result.cost * 0.4) });
-        } else {
-          res.json(result);
-        }
+
+      return;
+    }
+
+    if (data.age >= 6) {
+      if (data.age > 64) {
+        res.json({ cost: Math.ceil(result.cost * 0.4) });
       } else {
-        res.json({ cost: 0 });
+        res.json(result);
       }
+    } else {
+      res.json({ cost: 0 });
     }
   });
 
