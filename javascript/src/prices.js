@@ -38,6 +38,19 @@ async function createApp() {
       return;
     }
 
+    if (data.type === "night") {
+      if (data.age >= 6) {
+        if (data.age > 64) {
+          res.json({ cost: Math.ceil(result.cost * 0.4) });
+        } else {
+          res.json(result);
+        }
+      } else {
+        res.json({ cost: 0 });
+      }
+      return;
+    }
+
     if (data.type !== "night") {
       const holidays = (await connection.query("SELECT * FROM `holidays`"))[0];
 
@@ -80,16 +93,6 @@ async function createApp() {
       }
 
       return;
-    }
-
-    if (data.age >= 6) {
-      if (data.age > 64) {
-        res.json({ cost: Math.ceil(result.cost * 0.4) });
-      } else {
-        res.json(result);
-      }
-    } else {
-      res.json({ cost: 0 });
     }
   });
 
