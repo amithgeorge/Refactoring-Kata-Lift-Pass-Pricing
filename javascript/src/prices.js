@@ -35,59 +35,58 @@ async function createApp() {
 
     if (data.age < 6) {
       res.json({ cost: 0 });
-    } else {
-      if (data.type !== "night") {
-        const holidays = (
-          await connection.query("SELECT * FROM `holidays`")
-        )[0];
+      return;
+    }
 
-        let isHoliday;
-        let reduction = 0;
-        for (let row of holidays) {
-          let holiday = row.holiday;
-          if (data.date) {
-            let d = new Date(data.date);
-            if (
-              d.getFullYear() === holiday.getFullYear() &&
-              d.getMonth() === holiday.getMonth() &&
-              d.getDate() === holiday.getDate()
-            ) {
-              isHoliday = true;
-            }
+    if (data.type !== "night") {
+      const holidays = (await connection.query("SELECT * FROM `holidays`"))[0];
+
+      let isHoliday;
+      let reduction = 0;
+      for (let row of holidays) {
+        let holiday = row.holiday;
+        if (data.date) {
+          let d = new Date(data.date);
+          if (
+            d.getFullYear() === holiday.getFullYear() &&
+            d.getMonth() === holiday.getMonth() &&
+            d.getDate() === holiday.getDate()
+          ) {
+            isHoliday = true;
           }
         }
+      }
 
-        if (!isHoliday && new Date(data.date).getDay() === 1) {
-          reduction = 35;
-        }
+      if (!isHoliday && new Date(data.date).getDay() === 1) {
+        reduction = 35;
+      }
 
-        // TODO apply reduction for others
-        if (data.age < 15) {
-          res.json({ cost: Math.ceil(result.cost * 0.7) });
+      // TODO apply reduction for others
+      if (data.age < 15) {
+        res.json({ cost: Math.ceil(result.cost * 0.7) });
+      } else {
+        if (data.age === undefined) {
+          let cost = result.cost * (1 - reduction / 100);
+          res.json({ cost: Math.ceil(cost) });
         } else {
-          if (data.age === undefined) {
-            let cost = result.cost * (1 - reduction / 100);
+          if (data.age > 64) {
+            let cost = result.cost * 0.75 * (1 - reduction / 100);
             res.json({ cost: Math.ceil(cost) });
           } else {
-            if (data.age > 64) {
-              let cost = result.cost * 0.75 * (1 - reduction / 100);
-              res.json({ cost: Math.ceil(cost) });
-            } else {
-              let cost = result.cost * (1 - reduction / 100);
-              res.json({ cost: Math.ceil(cost) });
-            }
+            let cost = result.cost * (1 - reduction / 100);
+            res.json({ cost: Math.ceil(cost) });
           }
+        }
+      }
+    } else {
+      if (data.age >= 6) {
+        if (data.age > 64) {
+          res.json({ cost: Math.ceil(result.cost * 0.4) });
+        } else {
+          res.json(result);
         }
       } else {
-        if (data.age >= 6) {
-          if (data.age > 64) {
-            res.json({ cost: Math.ceil(result.cost * 0.4) });
-          } else {
-            res.json(result);
-          }
-        } else {
-          res.json({ cost: 0 });
-        }
+        res.json({ cost: 0 });
       }
     }
   });
